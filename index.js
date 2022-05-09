@@ -19,6 +19,6 @@ app.use("/newsletter", require("./routes/newsletter"));
 app.use("/orders", require("./routes/orders"));
 app.use("/admin", require("./routes/admin"));
 
-app.listen(process.env.PORT, () => {
+app.listen(process.env.PORT || 5000, () => {
     console.log(`listning on port http://localhost:${process.env.PORT}`);
 });
