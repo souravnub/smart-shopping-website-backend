@@ -2,6 +2,7 @@ const express = require("express");
 const fetchUser = require("../middlewares/fetchUser");
 const router = express.Router();
 const Products = require("../models/Products");
+const cloudinaryInstance = require("..//utils/cloudinary/cloudinaryInstance");
 // getting all products
 
 router.get("/getallproducts", async (req, res) => {
@@ -44,30 +45,34 @@ router.get("/getproductsbycategory", async (req, res) => {
 
 router.post("/addproducts", fetchUser, async (req, res) => {
     try {
-        try {
-            if (req.is_admin) {
-                await Products.create(req.body);
+        if (req.is_admin) {
+            const uploadRes = await cloudinaryInstance.uploader.upload(
+                req.body.image_data_str
+            );
 
-                res.status(200).json({
-                    success: true,
-                    message: `product add successfuly..`,
-                });
-            } else {
-                res.status(401).json({
-                    success: false,
-                    message: "this route is available for admin users only",
-                });
-            }
-        } catch (error) {
-            console.log(error);
-            res.status(500).json({
+            await Products.create({
+                ...req.body,
+                image_url: uploadRes.url,
+                img_public_id: uploadRes.public_id,
+            });
+
+            res.status(200).json({
+                success: true,
+                message: `product added successfuly..`,
+            });
+        } else {
+            res.status(401).json({
                 success: false,
-                message: "some interanl server error occured.",
-                error,
+                message: "this route is available for admin users only",
             });
         }
     } catch (error) {
         console.log(error);
+        res.status(500).json({
+            success: false,
+            message: "some interanl server error occured.",
+            error,
+        });
     }
 });
 
@@ -80,7 +85,22 @@ router.post("/updateproducts", fetchUser, (req, res) => {
                 const new_products = req.body;
 
                 new_products.forEach(async (product) => {
-                    await Products.findByIdAndUpdate(product._id, product);
+                    const uploadRes = await cloudinaryInstance.uploader.upload(
+                        product.image_data_str
+                    );
+
+                    let prevProduct = await Products.findByIdAndUpdate(
+                        product._id,
+                        {
+                            ...product,
+                            image_url: uploadRes.url,
+                            img_public_id: uploadRes.public_id,
+                        }
+                    );
+
+                    await cloudinaryInstance.uploader.destroy(
+                        prevProduct.img_public_id
+                    );
                 });
 
                 res.status(200).json({
@@ -111,12 +131,18 @@ router.post("/deleteproducts", fetchUser, async (req, res) => {
     try {
         try {
             if (req.is_admin) {
-                const prevlength = await (await Products.find({})).length;
+                const products = await Products.find({});
+                let prevlength = products.length;
 
                 const products_to_delete = req.body;
 
                 products_to_delete.forEach(async (product_id) => {
-                    await Products.findByIdAndDelete(product_id);
+                    let deletedProduct = await Products.findByIdAndDelete(
+                        product_id
+                    );
+                    await cloudinaryInstance.uploader.destroy(
+                        deletedProduct.img_public_id
+                    );
                 });
 
                 const deleted_quan =
