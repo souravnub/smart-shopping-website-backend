@@ -3,10 +3,13 @@ const dotenv = require("dotenv");
 const connectToMongo = require("./db");
 const cors = require("cors");
 
+const serverless = require("serverless-http");
+
 dotenv.config();
 const port = process.env.PORT || 5000;
 
 const app = express();
+const router = express.Router();
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.json());
@@ -35,4 +38,8 @@ const start = async () => {
         console.log(`listning on port http://localhost:${port}`);
     });
 };
+
+app.use("/.netlify/functions/api", router);
 start();
+
+module.exports.handler = serverless(app);
