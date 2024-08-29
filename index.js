@@ -4,7 +4,7 @@ const connectToMongo = require("./db");
 const cors = require("cors");
 
 dotenv.config();
-const port = process.env.PORT || 5000;
+const port = 3000;
 
 const app = express();
 
@@ -32,7 +32,7 @@ const start = async () => {
             console.log(`ERROR : while listening to port \nERR : ${err}`);
             return;
         }
-        console.log(`listning on port http://localhost:${port}`);
+        console.log(`listning on port: ${port}`);
     });
 };
 start();
