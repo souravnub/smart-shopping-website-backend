@@ -39,4 +39,4 @@ jobs:
                       sudo docker pull sourav2004/smart-backend:latest
                       sudo docker stop backend-app || true
                       sudo docker rm backend-app || true
-                      sudo docker run -d --name backend-app -e MONGO_URI=${{secrets.MONGO_URI}} -e JWT_SECRET_KEY=${{secrets.JWT_SECRET_KEY}} -e CLOUDINARY_CLOUD_NAME=${{secrets.CLOUDINARY_CLOUD_NAME}} -e CLOUDINARY_API_KEY=${{secrets.CLOUDINARY_API_KEY}} -e CLOUDINARY_API_SECRET=${{secrets.CLOUDINARY_API_SECRET}} -p 3005:3000 sourav2004/smart-backend:latest
+                      sudo docker run -d --name backend-app -e MONGO_URI='${{secrets.MONGO_URI}}' -e JWT_SECRET_KEY='${{secrets.JWT_SECRET_KEY}}' -e CLOUDINARY_CLOUD_NAME='${{secrets.CLOUDINARY_CLOUD_NAME}}' -e CLOUDINARY_API_KEY='${{secrets.CLOUDINARY_API_KEY}}' -e CLOUDINARY_API_SECRET='${{secrets.CLOUDINARY_API_SECRET}}' -p 3005:3000 sourav2004/smart-backend:latest
