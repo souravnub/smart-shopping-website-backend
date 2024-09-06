@@ -23,6 +23,7 @@ jobs:
               with:
                   context: .
                   file: ./Dockerfile
+                  target: prod
                   push: true
                   tags: sourav2004/smart-backend:latest # Replace with your Docker Hub username and repository
 
