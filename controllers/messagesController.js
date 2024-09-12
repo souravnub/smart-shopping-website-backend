@@ -1,11 +1,7 @@
-const express = require("express");
 const fetchUser = require("../middlewares/fetchUser");
 const Messages = require("../models/Messages");
 
-const router = express.Router();
-
-// adding a new message
-router.post("/add", async (req, res) => {
+const addMessage = async (req, res) => {
     try {
         await Messages.create({
             user: req.body.user,
@@ -25,10 +21,9 @@ router.post("/add", async (req, res) => {
                 "some internal server error occured! message cannot be recorded.",
         });
     }
-});
+};
 
-// getting all the messages
-router.get("/all", fetchUser, async (req, res) => {
+const getAllMessages = async (req, res) => {
     try {
         if (req.is_admin) {
             const messages = await Messages.find({}).sort({ createdAt: "-1" });
@@ -47,10 +42,9 @@ router.get("/all", fetchUser, async (req, res) => {
                 "some internal server error occured ... unable to fetch messages",
         });
     }
-});
+};
 
-// deleting a message
-router.post("/delete/:id", fetchUser, (req, res) => {
+const deleteMessage = (req, res) => {
     try {
         if (req.is_admin) {
             const { id } = req.params;
@@ -84,11 +78,9 @@ router.post("/delete/:id", fetchUser, (req, res) => {
                 "some internal server error occured ... unable to fetch messages",
         });
     }
-});
+};
 
-// replying to a message
-
-router.post("/reply/:id", fetchUser, (req, res) => {
+const replyToMessage = (req, res) => {
     try {
         if (req.is_admin) {
             const { id } = req.params;
@@ -124,6 +116,6 @@ router.post("/reply/:id", fetchUser, (req, res) => {
                 "some internal server error occured.. cannot reply to the message",
         });
     }
-});
+};
 
-module.exports = router;
+module.exports = { addMessage, getAllMessages, deleteMessage, replyToMessage };

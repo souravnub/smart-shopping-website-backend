@@ -1,16 +1,9 @@
-const express = require("express");
 const Orders = require("../models/Orders");
 const Products = require("../models/Products");
 const Users = require("../models/Users");
 var jwt = require("jsonwebtoken");
-const dotenv = require("dotenv");
-const fetchUser = require("../middlewares/fetchUser");
 
-const router = express.Router();
-dotenv.config();
-
-// adding an order for a user
-router.post("/addorder", async (req, res) => {
+const createOrder = async (req, res) => {
     try {
         try {
             req.body.orders.forEach(async (product) => {
@@ -61,10 +54,9 @@ router.post("/addorder", async (req, res) => {
     } catch (error) {
         console.log(error);
     }
-});
+};
 
-// editing an existing order
-router.post("/edit", fetchUser, async (req, res) => {
+const updateOrder = async (req, res) => {
     try {
         const { id, orderId } = req.query;
 
@@ -103,11 +95,9 @@ router.post("/edit", fetchUser, async (req, res) => {
             "some internal server error occured cannot edit order.."
         );
     }
-});
+};
 
-// removing an existing order
-
-router.post("/delete", fetchUser, async (req, res) => {
+const deleteOrder = async (req, res) => {
     try {
         const { id, orderId } = req.query;
 
@@ -164,10 +154,9 @@ router.post("/delete", fetchUser, async (req, res) => {
                 "some internal server error occured ... cannot remove order",
         });
     }
-});
+};
 
-// getting all orders corresponding to a user
-router.get("/allorders", async (req, res) => {
+const getAllOrdersForUser = async (req, res) => {
     try {
         let userId = null;
 
@@ -202,10 +191,9 @@ router.get("/allorders", async (req, res) => {
     } catch (error) {
         console.log(error);
     }
-});
+};
 
-// getting all the orders in the shop
-router.get("/allshoporders", fetchUser, async (req, res) => {
+const getAllOrders = async (req, res) => {
     try {
         if (req.is_admin) {
             const orders = await Orders.find();
@@ -223,6 +211,12 @@ router.get("/allshoporders", fetchUser, async (req, res) => {
             message: "some internal server error occured.",
         });
     }
-});
+};
 
-module.exports = router;
+module.exports = {
+    createOrder,
+    updateOrder,
+    deleteOrder,
+    getAllOrdersForUser,
+    getAllOrders,
+};

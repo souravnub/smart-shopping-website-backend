@@ -12,12 +12,12 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.json());
 app.use(cors());
 
-app.use("/api/products", require("./routes/products"));
-app.use("/api/auth", require("./routes/auth"));
-app.use("/messages", require("./routes/messages"));
-app.use("/newsletter", require("./routes/newsletter"));
-app.use("/orders", require("./routes/orders"));
-app.use("/admin", require("./routes/admin"));
+app.use("/api/products", require("./routes/productsRouter"));
+app.use("/api/auth", require("./routes/authRouter"));
+app.use("/messages", require("./routes/messagesRouter"));
+app.use("/newsletter", require("./routes/newsletterRouter"));
+app.use("/orders", require("./routes/ordersRouter"));
+app.use("/admin", require("./routes/adminRouter"));
 
 const start = async () => {
     try {

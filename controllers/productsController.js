@@ -1,11 +1,7 @@
-const express = require("express");
-const fetchUser = require("../middlewares/fetchUser");
-const router = express.Router();
 const Products = require("../models/Products");
 const cloudinaryInstance = require("..//utils/cloudinary/cloudinaryInstance");
-// getting all products
 
-router.get("/getallproducts", async (req, res) => {
+const getAllProducts = async (req, res) => {
     try {
         const products = await Products.find();
         res.status(200).json({ success: true, products });
@@ -17,11 +13,9 @@ router.get("/getallproducts", async (req, res) => {
         });
         console.log(error);
     }
-});
+};
 
-//getting product by category
-
-router.get("/getproductsbycategory", async (req, res) => {
+const getProductsByCategory = async (req, res) => {
     try {
         const category = req.query.category;
 
@@ -39,11 +33,9 @@ router.get("/getproductsbycategory", async (req, res) => {
             message: "some internal server error occurred...",
         });
     }
-});
+};
 
-// adding products
-
-router.post("/addproducts", fetchUser, async (req, res) => {
+const createProducts = async (req, res) => {
     try {
         if (req.is_admin) {
             const uploadRes = await cloudinaryInstance.uploader.upload(
@@ -74,33 +66,19 @@ router.post("/addproducts", fetchUser, async (req, res) => {
             error,
         });
     }
-});
+};
 
-// udating products
-
-router.post("/updateproducts", fetchUser, (req, res) => {
+const updateProducts = (req, res) => {
     try {
         try {
             if (req.is_admin) {
                 const new_products = req.body;
 
                 new_products.forEach(async (product) => {
-                    const uploadRes = await cloudinaryInstance.uploader.upload(
-                        product.image_data_str
-                    );
-
-                    let prevProduct = await Products.findByIdAndUpdate(
-                        product._id,
-                        {
-                            ...product,
-                            image_url: uploadRes.url,
-                            img_public_id: uploadRes.public_id,
-                        }
-                    );
-
-                    await cloudinaryInstance.uploader.destroy(
-                        prevProduct.img_public_id
-                    );
+                    // TODO: handle image update if a new image is provided
+                    await Products.findByIdAndUpdate(product._id, {
+                        ...product,
+                    });
                 });
 
                 res.status(200).json({
@@ -114,6 +92,7 @@ router.post("/updateproducts", fetchUser, (req, res) => {
                 });
             }
         } catch (error) {
+            console.log("error in first catch");
             res.status(500).json({
                 success: false,
                 message: "some interanl server error occured.",
@@ -121,13 +100,12 @@ router.post("/updateproducts", fetchUser, (req, res) => {
             });
         }
     } catch (error) {
-        console.log(error);
+        console.log("error in second catch");
+        // console.log(error);
     }
-});
+};
 
-// Deleting products
-
-router.post("/deleteproducts", fetchUser, async (req, res) => {
+const deleteProducts = async (req, res) => {
     try {
         try {
             if (req.is_admin) {
@@ -137,12 +115,8 @@ router.post("/deleteproducts", fetchUser, async (req, res) => {
                 const products_to_delete = req.body;
 
                 products_to_delete.forEach(async (product_id) => {
-                    let deletedProduct = await Products.findByIdAndDelete(
-                        product_id
-                    );
-                    await cloudinaryInstance.uploader.destroy(
-                        deletedProduct.img_public_id
-                    );
+                    await Products.findByIdAndDelete(product_id);
+                    // TODO: delete image related to product
                 });
 
                 const deleted_quan =
@@ -168,11 +142,9 @@ router.post("/deleteproducts", fetchUser, async (req, res) => {
     } catch (error) {
         console.log(error);
     }
-});
+};
 
-// adding comment
-
-router.put("/addcomment/:id", async (req, res) => {
+const addComment = async (req, res) => {
     try {
         const comment = req.body;
 
@@ -196,11 +168,9 @@ router.put("/addcomment/:id", async (req, res) => {
     } catch (error) {
         console.log(error);
     }
-});
+};
 
-// getting specific products
-
-router.get("/getproducts", async (req, res) => {
+const getProducts = async (req, res) => {
     try {
         const products_obj = req.query;
 
@@ -220,6 +190,13 @@ router.get("/getproducts", async (req, res) => {
             message: "some internal server error occured ....",
         });
     }
-});
-
-module.exports = router;
+};
+module.exports = {
+    getAllProducts,
+    getProductsByCategory,
+    getProducts,
+    addComment,
+    deleteProducts,
+    updateProducts,
+    createProducts,
+};

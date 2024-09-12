@@ -1,14 +1,9 @@
-const express = require("express");
 const Users = require("../models/Users");
-const bcrypt = require("bcrypt");
 var jwt = require("jsonwebtoken");
-const dotenv = require("dotenv");
 const fetchUser = require("../middlewares/fetchUser");
+const bcrypt = require("bcrypt");
 
-dotenv.config();
-const router = express.Router();
-
-router.post("/signup", async (req, res) => {
+const signUp = async (req, res) => {
     const found = await Users.findOne({ email: req.body.email });
     if (found === null) {
         const body = req.body;
@@ -46,9 +41,9 @@ router.post("/signup", async (req, res) => {
                 "Email had already been used !! Please Try to use another one.",
         });
     }
-});
+};
 
-router.post("/login", async (req, res) => {
+const login = async (req, res) => {
     const body = req.body;
 
     const user = await Users.findOne({ email: body.email });
@@ -79,11 +74,9 @@ router.post("/login", async (req, res) => {
             message: "no user found with this email.",
         });
     }
-});
+};
 
-// getting a user
-
-router.get("/getuser", async (req, res) => {
+const getUser = async (req, res) => {
     try {
         let data = null;
 
@@ -117,11 +110,9 @@ router.get("/getuser", async (req, res) => {
     } catch (error) {
         console.log(error);
     }
-});
+};
 
-// get all users
-
-router.get("/getallusers", fetchUser, async (req, res) => {
+const getAllUsers = async (req, res) => {
     try {
         if (req.is_admin) {
             const users = await Users.find({}).select(
@@ -141,11 +132,9 @@ router.get("/getallusers", fetchUser, async (req, res) => {
         });
         console.log(err);
     }
-});
+};
 
-// deleting a user
-
-router.post("/deleteuser/:id", fetchUser, async (req, res) => {
+const deleteUser = async (req, res) => {
     try {
         if (req.is_admin) {
             const userId = req.params.id;
@@ -178,11 +167,9 @@ router.post("/deleteuser/:id", fetchUser, async (req, res) => {
                 "some internal server error occured ! unable to delete user ....",
         });
     }
-});
+};
 
-// promote user to admin
-
-router.post("/promoteuser/:id", fetchUser, async (req, res) => {
+const promoteUserToAdmin = async (req, res) => {
     try {
         if (req.is_admin) {
             const { id } = req.params;
@@ -214,10 +201,10 @@ router.post("/promoteuser/:id", fetchUser, async (req, res) => {
             message: "some internal server error occured !",
         });
     }
-});
+};
 
-// update a user
-router.post("/updateuser/:id", (req, res) => {
+const updateUser = (req, res) => {
+    // authenticate user here: get the id from token, not from params
     const { id } = req.params;
 
     Users.findByIdAndUpdate(id, req.body)
@@ -234,6 +221,14 @@ router.post("/updateuser/:id", (req, res) => {
                 message: "some unknown error occured....",
             });
         });
-});
+};
 
-module.exports = router;
+module.exports = {
+    signUp,
+    login,
+    getUser,
+    getAllUsers,
+    deleteUser,
+    promoteUserToAdmin,
+    updateUser,
+};

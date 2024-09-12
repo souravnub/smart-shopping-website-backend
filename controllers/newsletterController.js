@@ -1,11 +1,7 @@
-const express = require("express");
-const router = express.Router();
 const NewsLetterModel = require("../models/NewsLetter");
-const fetchUser = require("../middlewares/fetchUser");
 const Users = require("../models/Users");
 
-// adding and removing a user from newsletter
-router.post("/addremove", async (req, res) => {
+const addOrRemoveNewsLetterUser = async (req, res) => {
     const { email, name, action } = req.query;
 
     const isLoggedUser = await Users.findOne({ email: email });
@@ -70,11 +66,9 @@ router.post("/addremove", async (req, res) => {
     } else {
         res.status(409).json({ success: false, message: "action is invalid" });
     }
-});
+};
 
-//getting all users with newsletter subscription
-
-router.get("/all", fetchUser, async (req, res) => {
+const getAllNewsLetterUsers = async (req, res) => {
     try {
         if (req.is_admin) {
             const users = await NewsLetterModel.find().select(
@@ -95,6 +89,6 @@ router.get("/all", fetchUser, async (req, res) => {
             message: "some internal server error occured.",
         });
     }
-});
+};
 
-module.exports = router;
+module.exports = { addOrRemoveNewsLetterUser, getAllNewsLetterUsers };
