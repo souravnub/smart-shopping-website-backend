@@ -6,7 +6,7 @@ async function authorizeUser(req, res, next) {
     let token = req.header("token");
 
     if (!token) {
-        throw new NotAuthorizedError("Not authorized!");
+        next(new NotAuthorizedError("Not authorized!"));
     }
 
     try {
@@ -14,7 +14,7 @@ async function authorizeUser(req, res, next) {
         const user = await Users.findById(userId);
 
         if (!user) {
-            throw new NotAuthorizedError("Not authorized!");
+            next(new NotAuthorizedError("Not authorized!"));
         }
 
         req.is_admin = user.is_admin;

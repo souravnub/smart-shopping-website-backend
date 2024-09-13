@@ -77,53 +77,23 @@ const login = async (req, res) => {
 
 const getUser = async (req, res) => {
     try {
-        let data = null;
-
-        try {
-            data = jwt.verify(req.headers.token, process.env.JWT_SECRET_KEY);
-        } catch (error) {
-            res.status(404).json({
-                success: false,
-                message: "no user found !Invalid authtoken",
-            });
-        }
-
-        try {
-            const user = await Users.findById(data.userId).select("-password");
-
-            if (user) {
-                res.status(200).json({ success: true, user });
-            } else {
-                res.status(404).json({
-                    success: false,
-                    message: "no user with this id",
-                });
-            }
-        } catch (error) {
-            res.status(500).json({
-                sucess: false,
-                message:
-                    "some internal server error occured ! cannot fetch details",
-            });
-        }
+        const user = await Users.findById(req.userId).select("-password");
+        res.status(200).json({ success: true, user });
     } catch (error) {
-        console.log(error);
+        res.status(500).json({
+            sucess: false,
+            message:
+                "some internal server error occured ! cannot fetch details",
+        });
     }
 };
 
 const getAllUsers = async (req, res) => {
     try {
-        if (req.is_admin) {
-            const users = await Users.find({}).select(
-                "-location_info -password -__v"
-            );
-            res.status(200).json({ success: true, users });
-        } else {
-            res.status(401).json({
-                success: false,
-                message: "this route is available for admin users only",
-            });
-        }
+        const users = await Users.find({}).select(
+            "-location_info -password -__v"
+        );
+        res.status(200).json({ success: true, users });
     } catch (err) {
         res.status(500).json({
             success: false,
@@ -135,30 +105,23 @@ const getAllUsers = async (req, res) => {
 
 const deleteUser = async (req, res) => {
     try {
-        if (req.is_admin) {
-            const userId = req.params.id;
+        const userId = req.params.id;
 
-            Users.findByIdAndDelete(userId)
-                .then(() =>
-                    res.status(200).json({
-                        success: true,
-                        message: "user deleted successfully!",
-                    })
-                )
-                .catch((err) => {
-                    console.log(err);
-                    res.status(500).json({
-                        success: false,
-                        message:
-                            "unable to delete user ! some problem occured ....",
-                    });
+        Users.findByIdAndDelete(userId)
+            .then(() =>
+                res.status(200).json({
+                    success: true,
+                    message: "user deleted successfully!",
+                })
+            )
+            .catch((err) => {
+                console.log(err);
+                res.status(500).json({
+                    success: false,
+                    message:
+                        "unable to delete user ! some problem occured ....",
                 });
-        } else {
-            res.status(401).json({
-                success: false,
-                message: "this route is available for admin user only !",
             });
-        }
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -170,29 +133,22 @@ const deleteUser = async (req, res) => {
 
 const promoteUserToAdmin = async (req, res) => {
     try {
-        if (req.is_admin) {
-            const { id } = req.params;
+        const { id } = req.params;
 
-            Users.findByIdAndUpdate(id, { is_admin: true })
-                .then(() => {
-                    res.status(200).json({
-                        success: true,
-                        message: "user promoted successfully !",
-                    });
-                })
-                .catch((err) => {
-                    console.log(err);
-                    res.status(500).json({
-                        success: false,
-                        message: "some error occured! cannot promote user....",
-                    });
+        Users.findByIdAndUpdate(id, { is_admin: true })
+            .then(() => {
+                res.status(200).json({
+                    success: true,
+                    message: "user promoted successfully !",
                 });
-        } else {
-            res.status(401).json({
-                success: false,
-                message: "route is available to admin users only",
+            })
+            .catch((err) => {
+                console.log(err);
+                res.status(500).json({
+                    success: false,
+                    message: "some error occured! cannot promote user....",
+                });
             });
-        }
     } catch (error) {
         console.log(error);
         res.status(500).json({
@@ -203,10 +159,7 @@ const promoteUserToAdmin = async (req, res) => {
 };
 
 const updateUser = (req, res) => {
-    // authenticate user here: get the id from token, not from params
-    const { id } = req.params;
-
-    Users.findByIdAndUpdate(id, req.body)
+    Users.findByIdAndUpdate(req.userId, req.body)
         .then(() => {
             res.status(200).json({
                 success: true,

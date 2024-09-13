@@ -1,7 +1,9 @@
 # version: "3.5"
 services:
     app:
-        build: .
+        build:
+            context: .
+            target: dev
         container_name: smart-backend
         environment:
             - MONGO_URI=mongodb://db:27017

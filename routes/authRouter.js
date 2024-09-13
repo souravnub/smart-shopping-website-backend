@@ -1,6 +1,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const authorizeUser = require("../middlewares/authorizeUser");
+const authorizeAdmin = require("../middlewares/authorizeAdmin");
 const {
     signUp,
     login,
@@ -16,11 +17,17 @@ const router = express.Router();
 
 router.post("/signup", signUp);
 router.post("/login", login);
-router.get("/getuser", getUser);
-router.post("/updateuser/:id", updateUser);
 
-router.get("/getallusers", authorizeUser, getAllUsers);
-router.post("/deleteuser/:id", authorizeUser, deleteUser);
-router.post("/promoteuser/:id", authorizeUser, promoteUserToAdmin);
+router.get("/getuser", authorizeUser, getUser);
+router.post("/updateuser", authorizeUser, updateUser);
+
+router.get("/getallusers", authorizeUser, authorizeAdmin, getAllUsers);
+router.post("/deleteuser/:id", authorizeUser, authorizeAdmin, deleteUser);
+router.post(
+    "/promoteuser/:id",
+    authorizeUser,
+    authorizeAdmin,
+    promoteUserToAdmin
+);
 
 module.exports = router;

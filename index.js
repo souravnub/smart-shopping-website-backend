@@ -2,6 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const connectToMongo = require("./db");
 const cors = require("cors");
+const errorHandler = require("./middlewares/errorHandler");
 
 dotenv.config();
 const port = 3000;
@@ -19,6 +20,7 @@ app.use("/newsletter", require("./routes/newsletterRouter"));
 app.use("/orders", require("./routes/ordersRouter"));
 app.use("/admin", require("./routes/adminRouter"));
 
+app.use(errorHandler);
 const start = async () => {
     try {
         await connectToMongo(process.env.MONGO_URI);
