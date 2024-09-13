@@ -1,6 +1,6 @@
 const express = require("express");
 const dotenv = require("dotenv");
-const fetchUser = require("../middlewares/fetchUser");
+const authorizeUser = require("../middlewares/authorizeUser");
 const {
     signUp,
     login,
@@ -19,8 +19,8 @@ router.post("/login", login);
 router.get("/getuser", getUser);
 router.post("/updateuser/:id", updateUser);
 
-router.get("/getallusers", fetchUser, getAllUsers);
-router.post("/deleteuser/:id", fetchUser, deleteUser);
-router.post("/promoteuser/:id", fetchUser, promoteUserToAdmin);
+router.get("/getallusers", authorizeUser, getAllUsers);
+router.post("/deleteuser/:id", authorizeUser, deleteUser);
+router.post("/promoteuser/:id", authorizeUser, promoteUserToAdmin);
 
 module.exports = router;

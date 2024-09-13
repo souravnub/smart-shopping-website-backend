@@ -1,6 +1,5 @@
 const Users = require("../models/Users");
 var jwt = require("jsonwebtoken");
-const fetchUser = require("../middlewares/fetchUser");
 const bcrypt = require("bcrypt");
 
 const signUp = async (req, res) => {

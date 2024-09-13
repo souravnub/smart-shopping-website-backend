@@ -1,9 +1,9 @@
 const express = require("express");
-const fetchUser = require("../middlewares/fetchUser");
+const authorizeUser = require("../middlewares/authorizeUser");
 const { getDashboardData } = require("../controllers/adminController");
 
 const router = express.Router();
 // getting all data required for admin
-router.get("/data", fetchUser, getDashboardData);
+router.get("/data", authorizeUser, getDashboardData);
 
 module.exports = router;

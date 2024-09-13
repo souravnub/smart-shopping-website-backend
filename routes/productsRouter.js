@@ -1,5 +1,5 @@
 const express = require("express");
-const fetchUser = require("../middlewares/fetchUser");
+const authorizeUser = require("../middlewares/authorizeUser");
 const {
     getAllProducts,
     getProductsByCategory,
@@ -13,9 +13,9 @@ const router = express.Router();
 
 router.get("/getallproducts", getAllProducts);
 router.get("/getproductsbycategory", getProductsByCategory);
-router.post("/addproducts", fetchUser, createProducts);
-router.post("/updateproducts", fetchUser, updateProducts);
-router.post("/deleteproducts", fetchUser, deleteProducts);
+router.post("/addproducts", authorizeUser, createProducts);
+router.post("/updateproducts", authorizeUser, updateProducts);
+router.post("/deleteproducts", authorizeUser, deleteProducts);
 router.put("/addcomment/:id", addComment);
 router.get("/getproducts", getProducts);
 

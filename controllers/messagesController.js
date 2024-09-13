@@ -1,4 +1,3 @@
-const fetchUser = require("../middlewares/fetchUser");
 const Messages = require("../models/Messages");
 
 const addMessage = async (req, res) => {

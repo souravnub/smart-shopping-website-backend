@@ -1,7 +1,7 @@
 const express = require("express");
 
 const dotenv = require("dotenv");
-const fetchUser = require("../middlewares/fetchUser");
+const authorizeUser = require("../middlewares/authorizeUser");
 const {
     createOrder,
     updateOrder,
@@ -14,9 +14,9 @@ const router = express.Router();
 dotenv.config();
 
 router.post("/addorder", createOrder);
-router.post("/edit", fetchUser, updateOrder);
-router.post("/delete", fetchUser, deleteOrder);
+router.post("/edit", authorizeUser, updateOrder);
+router.post("/delete", authorizeUser, deleteOrder);
 router.get("/allorders", getAllOrdersForUser);
-router.get("/allshoporders", fetchUser, getAllOrders);
+router.get("/allshoporders", authorizeUser, getAllOrders);
 
 module.exports = router;

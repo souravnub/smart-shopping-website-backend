@@ -1,9 +1,7 @@
 # version: "3.5"
 services:
     app:
-        build:
-            context: .
-            target: dev
+        build: .
         container_name: smart-backend
         environment:
             - MONGO_URI=mongodb://db:27017
@@ -25,7 +23,7 @@ services:
         container_name: smart-db
         restart: always
         ports:
-            - "27017:27017"
+            - "3001:27017"
         volumes:
             - mongo-data:/data/db
 
