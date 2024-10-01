@@ -1,215 +1,118 @@
+const InternalServerError = require("../errors/internal-server-error");
 const Orders = require("../models/Orders");
 const Products = require("../models/Products");
 const Users = require("../models/Users");
-var jwt = require("jsonwebtoken");
 
-const createOrder = async (req, res) => {
+const createOrder = async (req, res, next) => {
     try {
-        try {
-            req.body.orders.forEach(async (product) => {
-                let product_to_update = await Products.findById(
-                    product.product_id
+        req.body.orders.forEach(async (product) => {
+            let product_to_update = await Products.findById(product.product_id);
+
+            product_to_update.available_quantity =
+                product_to_update.available_quantity - product.quantity;
+            product_to_update.units_sold =
+                product_to_update.units_sold + product.quantity;
+
+            const available_quantity = product_to_update.available_quantity;
+
+            if (product_to_update.available_quantity === 0) {
+                await Products.findByIdAndUpdate(product.product_id, {
+                    available_quantity: available_quantity,
+                    in_stock: false,
+                });
+            } else {
+                await Products.findByIdAndUpdate(
+                    product.product_id,
+                    product_to_update
                 );
-
-                product_to_update.available_quantity =
-                    product_to_update.available_quantity - product.quantity;
-                product_to_update.units_sold =
-                    product_to_update.units_sold + product.quantity;
-
-                const available_quantity = product_to_update.available_quantity;
-
-                if (product_to_update.available_quantity === 0) {
-                    await Products.findByIdAndUpdate(product.product_id, {
-                        available_quantity: available_quantity,
-                        in_stock: false,
-                    });
-                } else {
-                    await Products.findByIdAndUpdate(
-                        product.product_id,
-                        product_to_update
-                    );
-                }
-            });
-
-            await Orders.create(req.body)
-                .then(() => {
-                    res.status(200).json({
-                        success: true,
-                        message: "order received successfully.",
-                    });
-                })
-                .catch((err) => {
-                    console.log(err);
-                    res.status(500).json({
-                        success: false,
-                        message: "Order was not placed.. some error occured.",
-                    });
-                });
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                message: "some internal server error ",
-            });
-        }
-    } catch (error) {
-        console.log(error);
-    }
-};
-
-const updateOrder = async (req, res) => {
-    try {
-        const { id, orderId } = req.query;
-
-        if (req.is_admin) {
-            const order = await Orders.findById(orderId);
-
-            order.orders.forEach((o) => {
-                if (o._id.toHexString() === id) {
-                    o.order_status = req.body.order_status;
-                }
-            });
-
-            Orders.findByIdAndUpdate(orderId, order)
-                .then(() => {
-                    res.json({
-                        success: true,
-                        message: "order editted successfully...",
-                    });
-                })
-                .catch((err) => {
-                    console.log(err);
-                    res.status(500).json({
-                        success: false,
-                        message: "something went wrong while editting order...",
-                    });
-                });
-        } else {
-            res.status(401).json({
-                success: false,
-                message: "unauthorized access are not allowed!",
-            });
-        }
-    } catch (error) {
-        console.log(error);
-        res.status(500).json(
-            "some internal server error occured cannot edit order.."
-        );
-    }
-};
-
-const deleteOrder = async (req, res) => {
-    try {
-        const { id, orderId } = req.query;
-
-        if (req.is_admin) {
-            const order = await Orders.findById(orderId);
-
-            order.orders = order.orders.filter(
-                (o) => o._id.toHexString() !== id
-            );
-
-            if (order.orders.length === 0) {
-                return Orders.findByIdAndDelete(orderId)
-                    .then(() => {
-                        res.json({
-                            success: true,
-                            message: "order removed successfully...",
-                        });
-                    })
-                    .catch((err) => {
-                        console.log(err);
-                        res.status(500).json({
-                            success: false,
-                            message:
-                                "something went wrong while removing order...",
-                        });
-                    });
             }
+        });
 
-            Orders.findByIdAndUpdate(orderId, order)
-                .then(() => {
-                    res.json({
-                        success: true,
-                        message: "order removed successfully...",
-                    });
-                })
-                .catch((err) => {
-                    console.log(err);
-                    res.status(500).json({
-                        success: false,
-                        message: "something went wrong while removing order...",
-                    });
+        await Orders.create(req.body)
+            .then(() => {
+                res.status(200).json({
+                    success: true,
+                    message: "order received successfully.",
                 });
-        } else {
-            res.status(401).json({
-                success: false,
-                message: "route avaliable to admin users only",
+            })
+            .catch((err) => {
+                next(new InternalServerError());
             });
-        }
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            messasge:
-                "some internal server error occured ... cannot remove order",
-        });
+        next(new InternalServerError());
     }
 };
 
-const getAllOrdersForUser = async (req, res) => {
+const updateOrder = async (req, res, next) => {
+    const { id, orderId } = req.query;
+
+    const order = await Orders.findById(orderId);
+
+    order.orders.forEach((o) => {
+        if (o._id.toHexString() === id) {
+            o.order_status = req.body.order_status;
+        }
+    });
+
+    Orders.findByIdAndUpdate(orderId, order)
+        .then(() => {
+            res.json({
+                success: true,
+                message: "order editted successfully...",
+            });
+        })
+        .catch((err) => {
+            next(new InternalServerError());
+        });
+};
+
+const deleteOrder = async (req, res, next) => {
     try {
-        let userId = null;
+        const { id, orderId } = req.query;
+        const order = await Orders.findById(orderId);
 
-        try {
-            const data = jwt.verify(
-                req.headers.token,
-                process.env.JWT_SECRET_KEY
-            );
-            userId = data.userId;
-        } catch (error) {
-            res.status(404).json({
-                success: false,
-                message: "invalid authtoken.",
+        order.orders = order.orders.filter((o) => o._id.toHexString() !== id);
+
+        if (order.orders.length === 0) {
+            return Orders.findByIdAndDelete(orderId).then(() => {
+                res.json({
+                    success: true,
+                    message: "order removed successfully...",
+                });
             });
         }
 
-        try {
-            const user = await Users.findById(userId).select("email");
-
-            const orders = await Orders.find({
-                user_email: user.email,
-            }).select("orders createdAt order_status");
-
-            res.status(200).json(orders);
-        } catch (error) {
-            console.log(error);
-            res.status(500).json({
-                success: false,
-                message: "some internal server error occured..",
+        Orders.findByIdAndUpdate(orderId, order).then(() => {
+            res.json({
+                success: true,
+                message: "order removed successfully...",
             });
-        }
+        });
     } catch (error) {
-        console.log(error);
+        next(new InternalServerError());
     }
 };
 
-const getAllOrders = async (req, res) => {
+const getAllOrdersForUser = async (req, res, next) => {
     try {
-        if (req.is_admin) {
-            const orders = await Orders.find();
-            res.status(200).json({ success: true, orders });
-        } else {
-            res.status(401).json({
-                success: false,
-                message: "unauthorized access are not allowed!",
-            });
-        }
+        const user = await Users.findById(req.userId).select("email");
+
+        const orders = await Orders.find({
+            user_email: user.email,
+        }).select("orders createdAt order_status");
+
+        res.status(200).json(orders);
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            sucess: false,
-            message: "some internal server error occured.",
-        });
+        next(new InternalServerError());
+    }
+};
+
+const getAllOrders = async (req, res, next) => {
+    try {
+        const orders = await Orders.find();
+        res.status(200).json({ success: true, orders });
+    } catch (error) {
+        next(new InternalServerError());
     }
 };
 

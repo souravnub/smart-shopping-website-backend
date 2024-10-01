@@ -21,13 +21,8 @@ router.post("/login", login);
 router.get("/getuser", authorizeUser, getUser);
 router.post("/updateuser", authorizeUser, updateUser);
 
-router.get("/getallusers", authorizeUser, authorizeAdmin, getAllUsers);
-router.post("/deleteuser/:id", authorizeUser, authorizeAdmin, deleteUser);
-router.post(
-    "/promoteuser/:id",
-    authorizeUser,
-    authorizeAdmin,
-    promoteUserToAdmin
-);
+router.get("/getallusers", authorizeAdmin, getAllUsers);
+router.post("/deleteuser/:id", authorizeAdmin, deleteUser);
+router.post("/promoteuser/:id", authorizeAdmin, promoteUserToAdmin);
 
 module.exports = router;

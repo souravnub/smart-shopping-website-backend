@@ -1,7 +1,10 @@
+const ConflictError = require("../errors/conflict-error");
+const InternalServerError = require("../errors/internal-server-error");
+const NotFoundError = require("../errors/not-found-error");
 const NewsLetterModel = require("../models/NewsLetter");
 const Users = require("../models/Users");
 
-const addOrRemoveNewsLetterUser = async (req, res) => {
+const addOrRemoveNewsLetterUser = async (req, res, next) => {
     const { email, name, action } = req.query;
 
     const isLoggedUser = await Users.findOne({ email: email });
@@ -9,10 +12,7 @@ const addOrRemoveNewsLetterUser = async (req, res) => {
 
     if (action === "add") {
         if (user) {
-            res.status(409).json({
-                success: false,
-                message: "user with this email already exist.",
-            });
+            next(new ConflictError("User with this emial already exsits"));
         } else {
             NewsLetterModel.create({ user: name, email: email })
                 .then(async () => {
@@ -28,11 +28,7 @@ const addOrRemoveNewsLetterUser = async (req, res) => {
                     }
                 })
                 .catch((err) => {
-                    console.log(err);
-                    res.status(500).json({
-                        success: false,
-                        message: "some internal server error occured .",
-                    });
+                    next(new InternalServerError());
                 });
         }
     } else if (action === "remove") {
@@ -50,44 +46,25 @@ const addOrRemoveNewsLetterUser = async (req, res) => {
                     });
                 })
                 .catch((err) => {
-                    console.log(err);
-                    res.status(500).json({
-                        success: false,
-                        message:
-                            "unable to remove from newsletter service due to some internal server error.",
-                    });
+                    next(new InternalServerError());
                 });
         } else {
-            res.status(409).json({
-                success: false,
-                message: "no user found with this email to be removed...",
-            });
+            next(new NotFoundError("No user found with given email"));
         }
     } else {
-        res.status(409).json({ success: false, message: "action is invalid" });
+        next(new ConflictError("Actions is invalid"));
     }
 };
 
-const getAllNewsLetterUsers = async (req, res) => {
+const getAllNewsLetterUsers = async (req, res, next) => {
     try {
-        if (req.is_admin) {
-            const users = await NewsLetterModel.find().select(
-                "_id user email createdAt"
-            );
+        const users = await NewsLetterModel.find().select(
+            "_id user email createdAt"
+        );
 
-            res.status(200).json({ success: true, users });
-        } else {
-            res.status(401).json({
-                success: false,
-                message: "route is available to admin users only..",
-            });
-        }
+        res.status(200).json({ success: true, users });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: "some internal server error occured.",
-        });
+        next(new InternalServerError());
     }
 };
 

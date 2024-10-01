@@ -9,13 +9,14 @@ const {
     addComment,
     getProducts,
 } = require("../controllers/productsController");
+const authorizeAdmin = require("../middlewares/authorizeAdmin");
 const router = express.Router();
 
 router.get("/getallproducts", getAllProducts);
 router.get("/getproductsbycategory", getProductsByCategory);
-router.post("/addproducts", authorizeUser, createProducts);
-router.post("/updateproducts", authorizeUser, updateProducts);
-router.post("/deleteproducts", authorizeUser, deleteProducts);
+router.post("/addproducts", authorizeAdmin, createProducts);
+router.post("/updateproducts", authorizeAdmin, updateProducts);
+router.post("/deleteproducts", authorizeAdmin, deleteProducts);
 router.put("/addcomment/:id", addComment);
 router.get("/getproducts", getProducts);
 

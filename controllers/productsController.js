@@ -1,21 +1,16 @@
+const InternalServerError = require("../errors/internal-server-error");
 const Products = require("../models/Products");
-const cloudinaryInstance = require("..//utils/cloudinary/cloudinaryInstance");
 
-const getAllProducts = async (req, res) => {
+const getAllProducts = async (req, res, next) => {
     try {
         const products = await Products.find();
         res.status(200).json({ success: true, products });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message:
-                "some internal server error occured ... cannot fetch products",
-        });
-        console.log(error);
+        next(new InternalServerError());
     }
 };
 
-const getProductsByCategory = async (req, res) => {
+const getProductsByCategory = async (req, res, next) => {
     try {
         const category = req.query.category;
 
@@ -27,124 +22,75 @@ const getProductsByCategory = async (req, res) => {
             res.status(200).json({ success: true, products });
         }
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: "some internal server error occurred...",
+        next(new InternalServerError());
+    }
+};
+
+const createProducts = async (req, res, next) => {
+    try {
+        const uploadRes = await cloudinaryInstance.uploader.upload(
+            req.body.image_data_str
+        );
+
+        await Products.create({
+            ...req.body,
+            image_url: uploadRes.url,
+            img_public_id: uploadRes.public_id,
         });
-    }
-};
 
-const createProducts = async (req, res) => {
-    try {
-        if (req.is_admin) {
-            const uploadRes = await cloudinaryInstance.uploader.upload(
-                req.body.image_data_str
-            );
-
-            await Products.create({
-                ...req.body,
-                image_url: uploadRes.url,
-                img_public_id: uploadRes.public_id,
-            });
-
-            res.status(200).json({
-                success: true,
-                message: `product added successfuly..`,
-            });
-        } else {
-            res.status(401).json({
-                success: false,
-                message: "this route is available for admin users only",
-            });
-        }
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: "some interanl server error occured.",
-            error,
+        res.status(200).json({
+            success: true,
+            message: `product added successfuly..`,
         });
-    }
-};
-
-const updateProducts = (req, res) => {
-    try {
-        try {
-            if (req.is_admin) {
-                const new_products = req.body;
-
-                new_products.forEach(async (product) => {
-                    // TODO: handle image update if a new image is provided
-                    await Products.findByIdAndUpdate(product._id, {
-                        ...product,
-                    });
-                });
-
-                res.status(200).json({
-                    success: true,
-                    message: `${new_products.length} updated successfully..`,
-                });
-            } else {
-                res.status(401).json({
-                    success: false,
-                    message: "route is available to admin users only..",
-                });
-            }
-        } catch (error) {
-            console.log("error in first catch");
-            res.status(500).json({
-                success: false,
-                message: "some interanl server error occured.",
-                error,
-            });
-        }
     } catch (error) {
-        console.log("error in second catch");
-        // console.log(error);
+        next(new InternalServerError());
     }
 };
 
-const deleteProducts = async (req, res) => {
+const updateProducts = (req, res, next) => {
     try {
-        try {
-            if (req.is_admin) {
-                const products = await Products.find({});
-                let prevlength = products.length;
+        const new_products = req.body;
 
-                const products_to_delete = req.body;
-
-                products_to_delete.forEach(async (product_id) => {
-                    await Products.findByIdAndDelete(product_id);
-                    // TODO: delete image related to product
-                });
-
-                const deleted_quan =
-                    prevlength - (await Products.find({})).length;
-
-                res.status(200).json({
-                    success: true,
-                    message: `${deleted_quan} products deleted ...`,
-                });
-            } else {
-                res.status(401).json({
-                    success: false,
-                    message: "route available for admin users only.",
-                });
-            }
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                message: "some internal error occured.",
-                error,
+        new_products.forEach(async (product) => {
+            // TODO: handle image update if a new image is provided
+            await Products.findByIdAndUpdate(product._id, {
+                ...product,
             });
-        }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: `${new_products.length} updated successfully..`,
+        });
     } catch (error) {
-        console.log(error);
+        next(new InternalServerError());
     }
 };
 
-const addComment = async (req, res) => {
+const deleteProducts = async (req, res, next) => {
+    try {
+        const products = await Products.find({});
+        let prevlength = products.length;
+
+        const products_to_delete = req.body;
+
+        products_to_delete.forEach(async (product_id) => {
+            await Products.findByIdAndDelete(product_id);
+            // TODO: delete image related to product
+        });
+
+        const deleted_quan = prevlength - (await Products.find({})).length;
+
+        res.status(200).json({
+            success: true,
+            message: `${deleted_quan} products deleted ...`,
+        });
+    } catch (error) {
+        next(new InternalServerError());
+    }
+};
+
+const addComment = async (req, res, next) => {
     try {
         const comment = req.body;
 
@@ -166,11 +112,11 @@ const addComment = async (req, res) => {
             message: "Comment Added Successfully.",
         });
     } catch (error) {
-        console.log(error);
+        next(new InternalServerError());
     }
 };
 
-const getProducts = async (req, res) => {
+const getProducts = async (req, res, next) => {
     try {
         const products_obj = req.query;
 
@@ -185,10 +131,7 @@ const getProducts = async (req, res) => {
 
         res.json(products_arr);
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "some internal server error occured ....",
-        });
+        next(new InternalServerError());
     }
 };
 module.exports = {

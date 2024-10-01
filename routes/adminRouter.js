@@ -5,6 +5,6 @@ const authorizeAdmin = require("../middlewares/authorizeAdmin");
 
 const router = express.Router();
 // getting all data required for admin
-router.get("/data", authorizeUser, authorizeAdmin, getDashboardData);
+router.get("/data", authorizeAdmin, getDashboardData);
 
 module.exports = router;

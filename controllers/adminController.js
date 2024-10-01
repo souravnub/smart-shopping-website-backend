@@ -3,8 +3,9 @@ const NewsLetter = require("../models/NewsLetter");
 const Orders = require("../models/Orders");
 const Messages = require("../models/Messages");
 const Users = require("../models/Users");
+const InternalServerError = require("../errors/internal-server-error");
 
-const getDashboardData = async (req, res) => {
+const getDashboardData = async (req, res, next) => {
     try {
         const mostSoldProducts = Products.find().sort({
             units_sold: -1,
@@ -34,18 +35,9 @@ const getDashboardData = async (req, res) => {
                     messages: values[5],
                 });
             })
-            .catch(() =>
-                res.status(500).json({
-                    success: false,
-                    message: "some internal server error occured...",
-                })
-            );
+            .catch((err) => next(new InternalServerError(err.message)));
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: "some internal server error occured...",
-        });
+        next(new InternalServerError(error.message));
     }
 };
 

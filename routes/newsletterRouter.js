@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const authorizeUser = require("../middlewares/authorizeUser");
 const {
     addOrRemoveNewsLetterUser,
     getAllNewsLetterUsers,
 } = require("../controllers/newsletterController");
+const authorizeAdmin = require("../middlewares/authorizeAdmin");
 
 router.post("/addremove", addOrRemoveNewsLetterUser);
-router.get("/all", authorizeUser, getAllNewsLetterUsers);
+router.get("/all", authorizeAdmin, getAllNewsLetterUsers);
 
 module.exports = router;

@@ -1,6 +1,8 @@
+const InternalServerError = require("../errors/internal-server-error");
+const NotAuthorizedError = require("../errors/not-authorized-error");
 const Messages = require("../models/Messages");
 
-const addMessage = async (req, res) => {
+const addMessage = async (req, res, next) => {
     try {
         await Messages.create({
             user: req.body.user,
@@ -13,107 +15,48 @@ const addMessage = async (req, res) => {
                 "your message had been recorded ! we will try to respond soon !",
         });
     } catch (err) {
-        console.log(err);
-        res.status(500).json({
-            success: false,
-            message:
-                "some internal server error occured! message cannot be recorded.",
-        });
+        next(new InternalServerError());
     }
 };
 
-const getAllMessages = async (req, res) => {
+const getAllMessages = async (req, res, next) => {
     try {
-        if (req.is_admin) {
-            const messages = await Messages.find({}).sort({ createdAt: "-1" });
-            res.json({ success: true, messages });
-        } else {
-            res.status(401).json({
-                success: false,
-                message: "route is available to admin users only",
-            });
-        }
+        const messages = await Messages.find({}).sort({ createdAt: "-1" });
+        res.json({ success: true, messages });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message:
-                "some internal server error occured ... unable to fetch messages",
-        });
+        next(new InternalServerError());
     }
 };
 
-const deleteMessage = (req, res) => {
+const deleteMessage = async (req, res, next) => {
     try {
-        if (req.is_admin) {
-            const { id } = req.params;
+        const { id } = req.params;
 
-            Messages.findByIdAndDelete(id)
-                .then(() => {
-                    res.json({
-                        success: true,
-                        message: "message deleted successfully",
-                    });
-                })
-                .catch((err) => {
-                    console.log(err);
-                    res.status(500).json({
-                        success: false,
-                        message:
-                            "some unknown error occured... cannot delete message",
-                    });
-                });
-        } else {
-            res.status(401).json({
-                success: false,
-                message: "route is available to admin users only...",
-            });
-        }
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message:
-                "some internal server error occured ... unable to fetch messages",
+        await Messages.findByIdAndDelete(id);
+
+        res.json({
+            success: true,
+            message: "message deleted successfully",
         });
+    } catch (error) {
+        next(new InternalServerError());
     }
 };
 
-const replyToMessage = (req, res) => {
+const replyToMessage = async (req, res, next) => {
+    const { id } = req.params;
+
     try {
-        if (req.is_admin) {
-            const { id } = req.params;
-            Messages.findByIdAndUpdate(id, {
-                responded: true,
-                response_message: req.body.reply,
-            })
-                .then(() =>
-                    res.json({
-                        success: true,
-                        message: "message replied successfully",
-                    })
-                )
-                .catch((err) => {
-                    console.log(err);
-                    res.status(500).json({
-                        success: false,
-                        message:
-                            "some issue occured while updating the message .... ",
-                    });
-                });
-        } else {
-            res.status(401).json({
-                success: false,
-                message: "route is available to admin users only",
-            });
-        }
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message:
-                "some internal server error occured.. cannot reply to the message",
+        await Messages.findByIdAndUpdate(id, {
+            responded: true,
+            response_message: req.body.reply,
         });
+        res.json({
+            success: true,
+            message: "message replied successfully",
+        });
+    } catch (err) {
+        next(new InternalServerError());
     }
 };
 

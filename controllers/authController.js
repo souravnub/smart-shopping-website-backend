@@ -1,8 +1,11 @@
 const Users = require("../models/Users");
 var jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const BadRequestError = require("../errors/bad-request-error");
+const NotFoundError = require("../errors/not-found-error");
+const InternalServerError = require("../errors/internal-server-error");
 
-const signUp = async (req, res) => {
+const signUp = async (req, res, next) => {
     const found = await Users.findOne({ email: req.body.email });
     if (found === null) {
         const body = req.body;
@@ -34,15 +37,15 @@ const signUp = async (req, res) => {
             authtoken,
         });
     } else {
-        res.status(400).json({
-            success: false,
-            message:
-                "Email had already been used !! Please Try to use another one.",
-        });
+        next(
+            new BadRequestError(
+                "Email had already been used !! Please Try to use another one."
+            )
+        );
     }
 };
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
     const body = req.body;
 
     const user = await Users.findOne({ email: body.email });
@@ -62,103 +65,64 @@ const login = async (req, res) => {
                 authtoken,
             });
         } else {
-            res.status(400).json({
-                success: false,
-                message: "Incorrect Password",
-            });
+            next(new BadRequestError("Invalid password"));
         }
     } else {
-        res.status(404).json({
-            success: false,
-            message: "no user found with this email.",
-        });
+        next(new NotFoundError("No user found with this emial"));
     }
 };
 
-const getUser = async (req, res) => {
+const getUser = async (req, res, next) => {
     try {
         const user = await Users.findById(req.userId).select("-password");
         res.status(200).json({ success: true, user });
     } catch (error) {
-        res.status(500).json({
-            sucess: false,
-            message:
-                "some internal server error occured ! cannot fetch details",
-        });
+        next(new InternalServerError());
     }
 };
 
-const getAllUsers = async (req, res) => {
+const getAllUsers = async (req, res, next) => {
     try {
         const users = await Users.find({}).select(
             "-location_info -password -__v"
         );
         res.status(200).json({ success: true, users });
     } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: "some internal server error occured",
-        });
-        console.log(err);
+        next(new InternalServerError());
     }
 };
 
-const deleteUser = async (req, res) => {
-    try {
-        const userId = req.params.id;
+const deleteUser = async (req, res, next) => {
+    const userId = req.params.id;
 
-        Users.findByIdAndDelete(userId)
-            .then(() =>
-                res.status(200).json({
-                    success: true,
-                    message: "user deleted successfully!",
-                })
-            )
-            .catch((err) => {
-                console.log(err);
-                res.status(500).json({
-                    success: false,
-                    message:
-                        "unable to delete user ! some problem occured ....",
-                });
-            });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message:
-                "some internal server error occured ! unable to delete user ....",
-        });
-    }
-};
-
-const promoteUserToAdmin = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        Users.findByIdAndUpdate(id, { is_admin: true })
-            .then(() => {
-                res.status(200).json({
-                    success: true,
-                    message: "user promoted successfully !",
-                });
+    Users.findByIdAndDelete(userId)
+        .then(() =>
+            res.status(200).json({
+                success: true,
+                message: "user deleted successfully!",
             })
-            .catch((err) => {
-                console.log(err);
-                res.status(500).json({
-                    success: false,
-                    message: "some error occured! cannot promote user....",
-                });
-            });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: "some internal server error occured !",
+        )
+        .catch((err) => {
+            next(new InternalServerError());
         });
-    }
 };
 
-const updateUser = (req, res) => {
+const promoteUserToAdmin = async (req, res, next) => {
+    const { id } = req.params;
+
+    Users.findByIdAndUpdate(id, { is_admin: true })
+        .then(() => {
+            res.status(200).json({
+                success: true,
+                message: "user promoted successfully !",
+            });
+        })
+        .catch((err) => {
+            next(new InternalServerError());
+        });
+};
+
+const updateUser = (req, res, next) => {
     Users.findByIdAndUpdate(req.userId, req.body)
         .then(() => {
             res.status(200).json({
@@ -167,11 +131,7 @@ const updateUser = (req, res) => {
             });
         })
         .catch((err) => {
-            console.log(err);
-            res.status(500).json({
-                success: false,
-                message: "some unknown error occured....",
-            });
+            next(new InternalServerError());
         });
 };
 
