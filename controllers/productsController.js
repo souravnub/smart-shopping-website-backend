@@ -28,14 +28,11 @@ const getProductsByCategory = async (req, res, next) => {
 
 const createProducts = async (req, res, next) => {
     try {
-        const uploadRes = await cloudinaryInstance.uploader.upload(
-            req.body.image_data_str
-        );
-
+        // TODO: handle image upload here
         await Products.create({
             ...req.body,
-            image_url: uploadRes.url,
-            img_public_id: uploadRes.public_id,
+            image_url: "",
+            img_public_id: "",
         });
 
         res.status(200).json({
