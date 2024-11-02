@@ -1,6 +1,6 @@
 const express = require("express");
 const Users = require("../models/Users");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 var jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const fetchUser = require("../middlewares/fetchUser");
@@ -29,10 +29,7 @@ router.post("/signup", async (req, res) => {
             },
         });
 
-        const authtoken = jwt.sign(
-            { userId: user_created._id },
-            process.env.JWT_SECRET_KEY
-        );
+        const authtoken = jwt.sign({ userId: user_created._id }, process.env.JWT_SECRET_KEY);
 
         res.status(200).json({
             success: true,
@@ -42,8 +39,7 @@ router.post("/signup", async (req, res) => {
     } else {
         res.status(400).json({
             success: false,
-            message:
-                "Email had already been used !! Please Try to use another one.",
+            message: "Email had already been used !! Please Try to use another one.",
         });
     }
 });
@@ -57,10 +53,7 @@ router.post("/login", async (req, res) => {
         const comparison = await bcrypt.compare(body.password, user.password);
 
         if (comparison) {
-            const authtoken = jwt.sign(
-                { userId: user._id },
-                process.env.JWT_SECRET_KEY
-            );
+            const authtoken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY);
 
             res.status(200).json({
                 success: true,
@@ -110,8 +103,7 @@ router.get("/getuser", async (req, res) => {
         } catch (error) {
             res.status(500).json({
                 sucess: false,
-                message:
-                    "some internal server error occured ! cannot fetch details",
+                message: "some internal server error occured ! cannot fetch details",
             });
         }
     } catch (error) {
@@ -124,9 +116,7 @@ router.get("/getuser", async (req, res) => {
 router.get("/getallusers", fetchUser, async (req, res) => {
     try {
         if (req.is_admin) {
-            const users = await Users.find({}).select(
-                "-location_info -password -__v"
-            );
+            const users = await Users.find({}).select("-location_info -password -__v");
             res.status(200).json({ success: true, users });
         } else {
             res.status(401).json({
@@ -161,8 +151,7 @@ router.post("/deleteuser/:id", fetchUser, async (req, res) => {
                     console.log(err);
                     res.status(500).json({
                         success: false,
-                        message:
-                            "unable to delete user ! some problem occured ....",
+                        message: "unable to delete user ! some problem occured ....",
                     });
                 });
         } else {
@@ -174,8 +163,7 @@ router.post("/deleteuser/:id", fetchUser, async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            message:
-                "some internal server error occured ! unable to delete user ....",
+            message: "some internal server error occured ! unable to delete user ....",
         });
     }
 });
